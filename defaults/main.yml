@@ -1,7 +1,9 @@
 ---
+
+# chez Cytadel, on utilise plutôt mysql pour gérer les comptes utilisateurs de pure-ftpd
 pureftpd_packages:
   - pure-ftpd-common
-  - pure-ftpd
+  - pure-ftpd-mysql
 
 pureftpd_global_config_mode: standalone
 pureftpd_global_config_virtualchroot: 'true'
@@ -11,29 +13,30 @@ pureftpd_global_config_uploadgid: ''
 
 pureftpd_fortune: ''
 
-pureftpd_mysql: []
+# Ces valeurs sont testées et validées par Cytadel
+pureftpd_mysql:
   # Available properties
-  # server: localhost
-  # port: 3306
-  # socket: /var/run/mysqld/mysqld.sock
-  # username: dbuser
-  # password: dbpass
-  # database: dbname
-  # crypt: crypt
-  # query_get_pw: SELECT Password FROM users WHERE User="\L"
-  # query_get_dir: SELECT Dir FROM users WHERE User="\L"
-  # query_get_uid: SELECT Uid FROM users WHERE User="\L"
-  # default_uid: 1000
-  # query_get_gid: SELECT Gid FROM users WHERE User="\L"
-  # default_gid: 1000
-  # query_get_qta_fs: SELECT QuotaFiles FROM users WHERE User="\L"
-  # query_get_qta_sz: SELECT QuotaSize FROM users WHERE User="\L"
-  # query_get_ratio_ul: SELECT ULRatio FROM users WHERE User="\L"
-  # query_get_ratio_dl: SELECT DLRatio FROM users WHERE User="\L"
-  # query_get_bandwidth_ul: SELECT ULBandwidth FROM users WHERE User="\L"
-  # query_get_bandwidth_dl: SELECT DLBandwidth FROM users WHERE User="\L"
-  # force_tilde_expansion: true
-  # transactions: true
+  server: localhost
+  port: 3306
+  socket: /var/run/mysqld/mysqld.sock
+  username: "{{ vault_pureftpd_mysql_username }}"
+  password: "{{ vault_pureftpd_mysql_password }}"
+  database: pureftpd
+  crypt: md5
+  query_get_pw: SELECT Password FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_dir: SELECT Dir FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_uid: SELECT Uid FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  #default_uid: 1200
+  query_get_gid: SELECT Gid FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  #default_gid: 1200
+  query_get_qta_fs: SELECT QuotaFiles FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_qta_sz: SELECT QuotaSize FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_ratio_ul: SELECT ULRatio FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_ratio_dl: SELECT DLRatio FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_bandwidth_ul: SELECT ULBandwidth FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  query_get_bandwidth_dl: SELECT DLBandwidth FROM users WHERE User="\L" AND status="1" AND (ipaccess = "*" OR ipaccess LIKE "\R")
+  force_tilde_expansion: true
+  transactions: true
 
 pureftpd_postgresql: []
   # Available properties
@@ -73,112 +76,76 @@ pureftpd_ldap: []
   # default_gid: 1000
   # force_default_gid: True
 
+
+# Ces options de config sont testées et validées par Cytadel
 pureftpd_config:
-  AllowAnonymousFXP: 'no'
-  AllowUserFXP: 'no'
-  AltLog: 'clf:/var/log/pure-ftpd/transfer.log'
-  AnonymousCanCreateDirs: 'no'
-  AnonymousCantUpload: 'yes'
-  AnonymousOnly: 'no'
-  AntiWarez: 'yes'
-  AutoRename: 'no'
-  BrokenClientsCompatibility: 'no'
-  ChrootEveryone: 'yes'
-  CreateHomeDir: 'yes'
-  CustomerProof: 'yes'
-  Daemonize: 'yes'
-  DisplayDotFiles: 'no'
-  DontResolve: 'yes'
-  FSCharset: 'UTF-8'
-  IPV4Only: 'yes'
-  KeepAllFiles: 'yes'
-  LimitRecursion: '2000 8'
-  MaxClientsNumber: '10'
-  MaxClientsPerIP: "{{ ansible_processor_cores }}"
-  MaxDiskUsage: '80'
-  MaxIdleTime: '15'
-  MaxLoad: '4'
-  MinUID: '1000'
-  NoAnonymous: 'yes'
-  NoChmod: 'yes'
-  PAMAuthentication: 'no'
-  PerUserLimits: '3 20'
-  ProhibitDotFilesRead: 'yes'
-  ProhibitDotFilesWrite: 'yes'
-  PureDB: /etc/pure-ftpd/pureftpd.pdb
-  Quota: '2000 500'
-  SyslogFacility: 'ftp'
-  TLS: '0'
-  Umask: '113 002'
-  UnixAuthentication: 'no'
-  VerboseLog: 'no'
-  # Available properties
   # AllowAnonymousFXP: 'no'
-  # AllowUserFXP: 'no'
-  # AltLog: 'clf:/var/log/pure-ftpd/transfer.log'
+  AllowUserFXP: 'yes'
+  AltLog: 'clf:/var/log/pure-ftpd/transfer.log'
   # AnonymousBandwidth: '8'
   # AnonymousCanCreateDirs: 'no'
   # AnonymousCantUpload: 'yes'
   # AnonymousOnly: 'no'
-  # AnonymousRatio: '1 10'
   # AntiWarez: 'yes'
   # AutoRename: 'no'
   # Bind: '127.0.0.1,21'
-  # BrokenClientsCompatibility: 'no'
+  BrokenClientsCompatibility: 'no'
   # CallUploadScript: 'yes'
-  # ChrootEveryone: 'yes'
-  # ClientCharset: 'UTF-8'
-  # CreateHomeDir: 'yes'
-  # CustomerProof: 'yes'
-  # Daemonize: 'yes'
-  # DisplayDotFiles: 'yes'
-  # DontResolve: 'yes'
+  ChrootEveryone: 'yes'
+  ClientCharset: 'UTF-8'
+  CreateHomeDir: 'yes'
+  #CustomerProof: 'yes'
+  Daemonize: 'yes'
+  DisplayDotFiles: 'no'
+  DontResolve: 'yes'
   # ExtAuth: /var/run/ftpd.sock
   # ForcePassiveIP: '192.168.0.1'
   # FortunesFile: '/etc/pure-ftpd/cookie'
-  # FSCharset: 'utf8'
-  # IPV4Only: 'yes'
+  FSCharset: 'UTF-8'
+  IPV4Only: 'yes'
   # IPV6Only: 'yes'
-  # KeepAllFiles: 'yes'
+  KeepAllFiles: 'no'
   # LDAPConfigFile: /etc/pureftpd-ldap.conf
-  # LimitRecursion: '10000 8'
-  # LogPID: 'yes'
-  # MaxClientsNumber: '10'
-  # MaxClientsPerIP: "{{ ansible_processor_cores }}"
-  # MaxDiskUsage: '80'
-  # MaxIdleTime: '15'
-  # MaxLoad: '4'
-  # MinUID: '1000'
-  # MySQLConfigFile: /etc/pure-ftpd/mysql.conf
-  # NoAnonymous: 'yes'
-  # NoChmod: 'yes'
-  # NoRename: 'yes'
+  #LimitRecursion: '2000 8'
+  # LogPID: 'yes'                                         # ATTENTION - cette option bloque le démarrage sur Debian 10
+  MaxClientsNumber: '10'
+  MaxClientsPerIP: "{{ ansible_processor_nproc }}"
+  MaxDiskUsage: '95'
+  MaxIdleTime: '15'
+  MaxLoad: '4'
+  MinUID: '1000'
+  MySQLConfigFile: /etc/pure-ftpd/db/mysql.conf
+  NoAnonymous: 'yes'
+  NoChmod: 'yes'
+  NoRename: 'no'
   # NoTruncate: 'yes'
-  # PAMAuthentication: 'no'
-  # PassivePortRange: '30000 50000'
-  # PerUserLimits: '3 20'
+  PAMAuthentication: 'no'
+  PassivePortRange: '30000 50000'
+  PerUserLimits: '3 20'
   # PGSQLConfigFile: /etc/pureftpd-pgsql.conf
-  # PIDFile: '/var/run/pure-ftpd.pid'
-  # ProhibitDotFilesRead: 'yes'
-  # ProhibitDotFilesWrite: 'yes'
-  # PureDB: /etc/pure-ftpd/pureftpd.pdb
-  # Quota: '1000 10'
-  # SyslogFacility: 'ftp'
-  # TLS: '0'
-  # TLSCipherSuite: 'ALL:!aNULL:!SSLv3'
+  # PIDFile: '/var/run/pure-ftpd.pid'                     # ATTENTION - cette option bloque le démarrage sur Debian 10
+  ProhibitDotFilesRead: 'yes'
+  ProhibitDotFilesWrite: 'yes'
+  #PureDB: /etc/pure-ftpd/pureftpd.pdb
+  #Quota: '2000 500'
+  SyslogFacility: 'ftp'
+  TLS: '0'
+  TLSCipherSuite: 'HIGH'                                  # default: 'ALL:!aNULL:!SSLv3'
   # TrustedIP: '10.1.1.1'
-  # Umask: '113 002'
-  # UnixAuthentication: 'no'
+  Umask: '113 002'
+  UnixAuthentication: 'no'
   # UserBandwidth: '8'
-  # UserRatio: '1 10'
-  # VerboseLog: 'no'
+  # UserRatio: '1 10'                                     # '0 0' pour désactiver les quotas
+  UnixAuthentication: 'no'
+  VerboseLog: 'yes'
 
-pureftpd_auth_puredb: 10
-pureftpd_auth_mysql: 0
+
+pureftpd_auth_puredb: 70
+pureftpd_auth_mysql: 10
 pureftpd_auth_postgresql: 0
 pureftpd_auth_ldap: 0
 pureftpd_auth_pam: 80
-pureftpd_auth_unix: 90
+pureftpd_auth_unix: 0
 
 pureftpd_system_users: []
   # Available properties

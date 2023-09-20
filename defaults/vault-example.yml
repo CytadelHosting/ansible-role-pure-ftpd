@@ -1,0 +1,9 @@
+---
+# this vault.yml file is a template for secrets management in CytadelHosting ansible-role-pure-ftpd
+# its content should be overriden by a properly vaulted `group_vars/ftpd/vault.yml` (assuming your group for pure-ftpd servers is names `ftpd`)
+# `ansible-vault encrypt --encrypt-vault-id {PROJECT_NAME} group_vars/ftpd/vault.yml
+
+# Credentials to connect to mysql pureftpd database, which managess user accounts
+# final quote is missing to ensure that you don't just uncomment the line, without changing the credentials
+# vault_pureftpd_mysql_username: 'MUST_CHANGE_LOGIN
+# vault_pureftpd_mysql_password: 'MUST_CHANGE_PASSWORD
