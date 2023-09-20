@@ -1,10 +1,12 @@
-Pure-FTPd
-=========
+# Pure-FTPd
 
 An Ansible Role that installs Pure-FTPd on Debian/Ubuntu.
 
-Requirements
-------------
+Original role: https://github.com/gcoop-libre/ansible-role-pure-ftpd
+Forked by Cytadel to fix and automate MySQL account management
+
+
+## Requirements
 
 This role only have requirements if the TLS support will be enabled and you need to generate the certificate.
 
@@ -12,14 +14,17 @@ If the value of `pureftpd_tls_certificate_method` is `generate`, `openssl` needs
 
 If the value of `pureftpd_tls_certificate_method` is `certbot`, `certbot` should be available on the remote server. You may use `geerlingguy.certbot` to install it.
 
-Role Variables
---------------
+
+## Role Variables
+
+
+### Basic configuration
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 
     pureftpd_packages:
       - pure-ftpd-common
-      - pure-ftpd
+      - pure-ftpd-mysql
 
 List of packages to install with APT.
 
@@ -172,14 +177,26 @@ The `TLS` option has four posible values (From `0` to `3`). This values implies:
 
 There is more information available at [Pure-FTPd documentation](http://download.pureftpd.org/pub/pure-ftpd/doc/README.TLS).
 
-    pureftpd_auth_puredb: 10
-    pureftpd_auth_mysql: 0
+    pureftpd_auth_puredb: 0
+    pureftpd_auth_mysql: 10
+    pureftpd_auth_postgresql: 0
+    pureftpd_auth_ldap: 0
+    pureftpd_auth_pam: 0
+    pureftpd_auth_unix: 0
+
+These properties set the prority of the different authentication methods. By default only mysql is enabled in our role.
+
+    pureftpd_auth_puredb: 30
+    pureftpd_auth_mysql: 10
     pureftpd_auth_postgresql: 0
     pureftpd_auth_ldap: 0
     pureftpd_auth_pam: 80
     pureftpd_auth_unix: 90
 
-These properties set the prority of the different authentication methods. Only those with a value greater than `0` will be enabled.
+Multiple authentication methods can be activated simultanously. Only those with a value greater than `0` will be enabled.
+
+
+### User management
 
     pureftpd_system_users:
       - name: user1
@@ -223,11 +240,36 @@ List of virtual users to create using PureDB as storage method. `name`, `passwor
 
 List of users that should not be present on the PureDB database. These is useful to delete old FTP accounts.
 
+
+    pureftpd_mysql_virtual_users:
+      - name: vuser1
+        password: p4ssW0rd
+        homedir: /var/ftp/vuser1
+        uid: 2000
+        gid: 2000
+        quota_files: 2000
+        quota_size: 500
+        bandwidth_ul: 5
+        bandwidth_dl: 5
+        ratio_ul: 10
+        ratio_dl: 1
+
+List of virtual users to create using MySQL as storage method. All parameters but `comment` are mandatory.
+
+    pureftpd_mysql_virtual_deleted_users:
+      - name: vuser2
+
+List of users that should not be present on the MySQL database. These is useful to delete old FTP accounts.
+
+
     pureftpd_virtual_users_import: false
 
 With this property enabled, the role will import the system users as virtual users.
 
 It should be noted that only accounts that have shell access will be imported. Accounts with the shell set to nologin have to be added manually.
+
+
+### TLS
 
     pureftpd_tls_certificate_method: ''
 
@@ -263,24 +305,22 @@ When using `generate`, this dictionary set the options for the `openssl` command
 
 When using `upload`, these options set the file to upload or the content of the certificate file to create on the server.
 
-Dependencies
-------------
+## Dependencies
 
 None.
 
-Example Playbook
-----------------
+## Example Playbook
 
     - hosts: webservers
       roles:
          - gcoop-libre.pure-ftpd
 
-License
--------
+## License
 
 GPLv2
 
-Author Information
-------------------
+## Author Information
 
-This role was created in 2017 by [gcoop Cooperativa de Software Libre](https://www.gcoop.coop).
+This role was forked in 2023 by [CytadelHosting](https://www.cytadel.fr/).
+
+It is based on [gcoop Cooperativa de Software Libre](https://www.gcoop.coop)'s https://github.com/gcoop-libre/ansible-role-pure-ftpd
