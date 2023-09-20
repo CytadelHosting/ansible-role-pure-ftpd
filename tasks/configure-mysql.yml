@@ -11,3 +11,40 @@
 - name: Ensure MySQLConfigFile value
   set_fact:
     pureftpd_config_compiled: "{{ pureftpd_config_compiled | combine({ 'MySQLConfigFile': pureftpd_config_db_dir + '/mysql.conf' }) }}"
+
+
+- name: Ensure pureftpd MySQL database is created
+  mysql_db:
+    name: "{{ pureftpd_mysql.database | default ('pureftpd') }}"
+    collation: "{{ item.collation | default('utf8_general_ci') }}"   # latin1_swedish_ci 
+    encoding: "{{ item.encoding | default('utf8') }}"                # latin1
+    state: 'present'
+  register: pureftpd_mysql_db_creation
+
+- name: Ensure pureftpd MySQL user is present.
+  mysql_user:
+    name: "{{ pureftpd_mysql.username | default ('pureftpd-83382z') }}"
+    host: 'localhost'
+    password: "{{ pureftpd_mysql.password | default ('!') }}"
+    priv: "{{ pureftpd_mysql.database | default ('pureftpd') }}.*:ALL"
+    state: 'present'
+    append_privs: false
+    #encrypted: true
+  #no_log: 'not {{ ansible_check_mode }}'
+  when: pureftpd_mysql_db_creation.changed
+  ignore_errors: '{{ ansible_check_mode }}'
+
+- name: Upload pure-ftpd mysql template
+  template:
+    src: "{{ pureftpd_mysql.db_template  | default ('db/pureftpd-mysql.sql.j2') }}"
+    dest: '/tmp/pure-ftpd_mysql_db_template.sql'
+
+- name: Ensure pureftpd.users table is created
+  mysql_db:
+    name: "{{ pureftpd_mysql.database | default ('pureftpd') }}"
+    state: import
+    target: '/tmp/pure-ftpd_mysql_db_template.sql'
+  when: pureftpd_mysql_db_creation.changed
+  ignore_errors: '{{ ansible_check_mode }}'
+
+
