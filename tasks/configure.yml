@@ -33,6 +33,7 @@
   register: pureftpd_current_config
   changed_when: false
 
+# pure le répertoire /etc/pure-ftpd/conf
 - name: Delete old configuration.
   file:
     path: "{{ pureftpd_config_conf_dir }}/{{ item }}"
@@ -41,6 +42,7 @@
   with_items: "{{ pureftpd_current_config.stdout_lines }}"
   notify: restart Pure-FTPd
 
+# recrée les includes de conf dans le répertoire /etc/pure-ftpd/conf
 - name: Write configuration.
   template:
     src: config.j2
