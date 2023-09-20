@@ -4,5 +4,5 @@
 
 - name: restart Pure-FTPd
   service:
-    name: pure-ftpd
+    name: pure-ftpd-mysql
     state: restarted

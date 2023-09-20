@@ -320,6 +320,10 @@ When using `generate`, this dictionary set the options for the `openssl` command
 
 When using `upload`, these options set the file to upload or the content of the certificate file to create on the server.
 
+## pure-ftpd Documentation
+
+- https://doc.fedora-fr.org/wiki/PureFTPD_:_Installation_et_configuration
+
 ## Dependencies
 
 None.

@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS `users` (
    `ipaccess` varchar(15) NOT NULL DEFAULT '*',
    `QuotaSize` smallint(5) NOT NULL DEFAULT 0,
    `QuotaFiles` int(11) NOT NULL DEFAULT 0,
-   `ULRatio` varchar(10) NOT NULL DEFAULT '0:0',
-   `DLRatio` varchar(10) NOT NULL DEFAULT '0:0',
+   `ULRatio` varchar(10) NOT NULL DEFAULT '0',
+   `DLRatio` varchar(10) NOT NULL DEFAULT '0',
    PRIMARY KEY (`User`),
    UNIQUE KEY `User` (`User`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;

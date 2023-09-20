@@ -28,6 +28,7 @@
   static: false
   when: pureftpd_ldap | length > 0
 
+# liste les includes de config dans /etc/pure-ftpd/conf
 - name: Get current configuration.
   command: ls -1 {{ pureftpd_config_conf_dir }}
   register: pureftpd_current_config

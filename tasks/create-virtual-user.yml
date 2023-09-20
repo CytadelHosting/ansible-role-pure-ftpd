@@ -13,6 +13,10 @@
   changed_when: "pureftpd_virtual_user_exists.rc != 0"
   ignore_errors: true
 
+
+###
+# PureDB maanged accounts
+###
 #- name: "User {{ user.name }}: Create virtual user"
 #  shell: "(echo {{ user.password }}; echo {{ user.password }}) | pure-pw useradd {{ user.name }} -u {{ user.uid | default(pureftpd_virtual_users_user) }} -g {{ user.gid | default(pureftpd_virtual_users_group) }} -d {{ user.homedir }} -n {{ user.quota_files | default('\"\"') }} -N {{ user.quota_size | default('\"\"') }} -t {{ user.bandwidth_dl | default('\"\"') }} -T {{ user.bandwidth_ul | default('\"\"') }} -q {{ user.ratio_ul | default('\"\"') }} -Q {{ user.ratio_dl | default('\"\"') }}"
 #  when: pureftpd_virtual_user_exists | failed
@@ -29,6 +33,9 @@
 #  notify: reload Pure-FTPd users
 
 
+###
+# MySQL managed accounts
+###
 - name: "User {{ user.name }}: Create home directory"
   file:
     dest: "{{ user.homedir }}"
@@ -40,66 +47,32 @@
 - name: "User {{ user.name }}: Verify if it exists in mysql backend"
   mysql_query:
     login_db: "{{ pureftpd_mysql.database | default ('pureftpd') }}"
-    query: "SELECT * FROM users WHERE User = %(ftp_user)s" # AND Password = MD5(%(ftp_password)s) AND Dir = %(ftp_homedir)s AND Uid = %(ftp_uid)s AND Gid = %(ftp_gid)s AND ipaccess = %(ftp_ipaccess)s AND status = %(ftp_status)s"
+    query: "SELECT * FROM users WHERE User = %(ftp_user)s"
     named_args:
       ftp_user:     "{{ user.name }}" 
-      ftp_password: "{{ user.password }}"
-      ftp_uid:      "{{ user.uid | default(pureftpd_virtual_users_user) }}"
-      ftp_gid:      "{{ user.gid | default(pureftpd_virtual_users_group) }}"
-      ftp_homedir:  "{{ user.homedir }}"
-      ftp_ipaccess: "{{ user.ipaccess | default ('*')}}"
-      ftp_status:   "{{ user.status | default (1) }}"
+      #ftp_password: "{{ user.password }}"
+      #ftp_uid:      "{{ user.uid | default(pureftpd_virtual_users_user) }}"
+      #ftp_gid:      "{{ user.gid | default(pureftpd_virtual_users_group) }}"
+      #ftp_homedir:  "{{ user.homedir }}"
+      #ftp_ipaccess: "{{ user.ipaccess | default ('*')}}"
+      #ftp_status:   "{{ user.status | default (1) }}"
   register: pureftpd_virtual_user_exists
   #changed_when: "pureftpd_virtual_user_exists.rc != 0"
   ignore_errors: true
 
-- name: debug user exists in mysql
-  debug:
-    var: pureftpd_virtual_user_exists
+#- name: debug user exists in mysql
+#  debug:
+#    var: pureftpd_virtual_user_exists
+
+#- name: debug user exists in mysql
+#  debug:
+#    msg: "row count de la request exists : {{ pureftpd_virtual_user_exists.rowcount }} - {{ pureftpd_virtual_user_exists.rowcount[0] | int | type_debug}}"
 
 
-- name: debug user exists in mysql
-  debug:
-    msg: "row count de la request exists : {{ pureftpd_virtual_user_exists.rowcount }} - {{ pureftpd_virtual_user_exists.rowcount[0] | int | type_debug}}"
-
-
-
-
-- name: "User {{ user.name }}: Verify if it exists in mysql backend"
+- name: "User {{ user.name }}: Insert non-existant virtual user in mysql backend"
   mysql_query:
     login_db: "{{ pureftpd_mysql.database | default ('pureftpd') }}"
-    query: "INSERT INTO users (User, Password, Dir, Uid, Gid, ipaccess, status, comment) VALUES (%(ftp_user)s, MD5(%(ftp_password)s), %(ftp_homedir)s, %(ftp_uid)s, %(ftp_gid)s, %(ftp_ipaccess)s, %(ftp_status)s, %(ftp_comment)s);"
-    named_args:
-      ftp_user:       "{{ user.name }}"
-      ftp_password:   "{{ user.password }}"
-      ftp_uid:        "{{ user.uid | default(pureftpd_virtual_users_user) }}"
-      ftp_gid:        "{{ user.gid | default(pureftpd_virtual_users_group) }}"
-      ftp_homedir:    "{{ user.homedir }}"
-      ftp_ipaccess:   "{{ user.ipaccess | default ('*')}}"
-      ftp_status:     "{{ user.status | default (1) }}"
-      ftp_comment:    "Managed by ansible - {{ user.comment | default (user.name) }}"
-
-      #ftp_quota:      "{{ user.quota_files | default(0) }}"
-      #ftp_quota_size: "{{ user.quota_size | default(0) }}"
-      #ftp_bw_dl:      "{{ user.bandwidth_dl | default(0) }}"
-      #ftp_bw_ul:      "{{ user.bandwidth_ul | default(0) }}"
-      #ftp_ratio_ul:   "{{ user.ratio_ul | default(0) }}"
-      #ftp_ratio_dl:   "{{ user.ratio_dl | default(0) }}"
-  when: pureftpd_virtual_user_exists.rowcount[0] | int == 0
-  register: pureftpd_virtual_user_inserted
-  changed_when: "pureftpd_virtual_user_inserted.changed"
-  ignore_errors: true
-
-
-- name: debug user has been inserted in mysql
-  debug:
-    var: pureftpd_virtual_user_inserted
-
-
-- name: "User {{ user.name }}: Verify if it exists in mysql backend"
-  mysql_query:
-    login_db: "{{ pureftpd_mysql.database | default ('pureftpd') }}"
-    query: "UPDATE users SET Password = MD5(%(ftp_password)s), Dir = %(ftp_homedir)s, Uid = %(ftp_uid)s, Gid = %(ftp_gid)s, ipaccess = %(ftp_ipaccess)s, status = %(ftp_status)s, comment = %(ftp_comment)s, QuotaSize = %(ftp_quota_size)s, QuotaFiles = %(ftp_quota)s, ULBandwidth = %(ftp_bw_ul)s, DLBandwidth = %(ftp_bw_dl)s WHERE User = %(ftp_user)s ;"
+    query: "INSERT INTO users (User, Password, Dir, Uid, Gid, ipaccess, status, comment, QuotaSize, QuotaFiles, ULBandwidth, DLBandwidth, ULRatio, DLRatio) VALUES (%(ftp_user)s, MD5(%(ftp_password)s), %(ftp_homedir)s, %(ftp_uid)s, %(ftp_gid)s, %(ftp_ipaccess)s, %(ftp_status)s, %(ftp_comment)s, %(ftp_quota_size)s, %(ftp_quota)s, %(ftp_bw_ul)s, %(ftp_bw_dl)s, %(ftp_ratio_ul)s, %(ftp_ratio_dl)s);"
     named_args:
       ftp_user:       "{{ user.name }}"
       ftp_password:   "{{ user.password }}"
@@ -114,13 +87,43 @@
       ftp_quota_size: "{{ user.quota_size | default(0) }}"
       ftp_bw_dl:      "{{ user.bandwidth_dl | default(0) }}"
       ftp_bw_ul:      "{{ user.bandwidth_ul | default(0) }}"
-      #ftp_ratio_ul:   "{{ user.ratio_ul | default(0) }}"
-      #ftp_ratio_dl:   "{{ user.ratio_dl | default(0) }}"
-  when: pureftpd_virtual_user_exists.rowcount[0] | int > 0
-  register: pureftpd_virtual_user_updated
-  #changed_when: "pureftpd_virtual_user_exists.updated"
+      ftp_ratio_ul:   "{{ user.ratio_ul | default(0) }}"
+      ftp_ratio_dl:   "{{ user.ratio_dl | default(0) }}"
+  when: pureftpd_virtual_user_exists.rowcount[0] | int == 0
+  register: pureftpd_virtual_user_inserted
+  changed_when: "pureftpd_virtual_user_inserted.changed"
   ignore_errors: true
 
-- name: debug user has been updated in mysql
-  debug:
-    var: pureftpd_virtual_user_updated
+#- name: debug user has been inserted in mysql
+#  debug:
+#    var: pureftpd_virtual_user_inserted
+
+
+- name: "User {{ user.name }}: Update previously-existant user in mysql backend"
+  mysql_query:
+    login_db: "{{ pureftpd_mysql.database | default ('pureftpd') }}"
+    query: "UPDATE users SET Password = MD5(%(ftp_password)s), Dir = %(ftp_homedir)s, Uid = %(ftp_uid)s, Gid = %(ftp_gid)s, ipaccess = %(ftp_ipaccess)s, status = %(ftp_status)s, comment = %(ftp_comment)s, QuotaSize = %(ftp_quota_size)s, QuotaFiles = %(ftp_quota)s, ULBandwidth = %(ftp_bw_ul)s, DLBandwidth = %(ftp_bw_dl)s, ULRatio = %(ftp_ratio_ul)s, DLRatio = %(ftp_ratio_dl)s WHERE User = %(ftp_user)s ;"
+    named_args:
+      ftp_user:       "{{ user.name }}"
+      ftp_password:   "{{ user.password }}"
+      ftp_uid:        "{{ user.uid | default(pureftpd_virtual_users_user) }}"
+      ftp_gid:        "{{ user.gid | default(pureftpd_virtual_users_group) }}"
+      ftp_homedir:    "{{ user.homedir }}"
+      ftp_ipaccess:   "{{ user.ipaccess | default ('*')}}"
+      ftp_status:     "{{ user.status | default (1) }}"
+      ftp_comment:    "Managed by ansible - {{ user.comment | default (user.name) }}"
+
+      ftp_quota:      "{{ user.quota_files | default(0) }}"
+      ftp_quota_size: "{{ user.quota_size | default(0) }}"
+      ftp_bw_dl:      "{{ user.bandwidth_dl | default(0) }}"
+      ftp_bw_ul:      "{{ user.bandwidth_ul | default(0) }}"
+      ftp_ratio_ul:   "{{ user.ratio_ul | default(0) }}"
+      ftp_ratio_dl:   "{{ user.ratio_dl | default(0) }}"
+  when: pureftpd_virtual_user_exists.rowcount[0] | int > 0
+  register: pureftpd_virtual_user_updated
+  #changed_when: "pureftpd_virtual_user_updated.changed"
+  ignore_errors: true
+
+#- name: debug user has been updated in mysql
+#  debug:
+#    var: pureftpd_virtual_user_updated
