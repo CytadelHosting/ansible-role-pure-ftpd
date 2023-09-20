@@ -198,6 +198,9 @@ Multiple authentication methods can be activated simultanously. Only those with 
 
 ### User management
 
+
+#### System users
+
     pureftpd_system_users:
       - name: user1
         password: p4ssW0rd
@@ -210,6 +213,11 @@ List of users that should be present on the system.
 
 List of users that should not be present on the system. These is useful to delete old FTP accounts on the system.
 
+
+#### Virtual users
+
+Virtual users are non system users (ie not present in `/etc/passwd`), managed by authentication backends declared in pure-ftpd config (pureDB, MySQL, postgreSQL, LDAP, ...)
+
     pureftpd_virtual_users_user: ftp
     pureftpd_virtual_users_group: ftp
 
@@ -219,6 +227,32 @@ If Pure-FTPd server will use virtual users, it need at least a system user and h
     pureftpd_virtual_users_uid: ''
 
 This properties force an UID and GID for them. They are not defined by default.
+
+
+##### Virtual users on MySQL authentication
+
+    pureftpd_mysql_virtual_users:
+      - name: vuser1
+        password: p4ssW0rd
+        homedir: /var/ftp/vuser1
+        uid: 2000
+        gid: 2000
+        quota_files: 2000
+        quota_size: 500
+        bandwidth_ul: 5
+        bandwidth_dl: 5
+        ratio_ul: 10
+        ratio_dl: 1
+
+List of virtual users to create using MySQL as storage method. All parameters but `comment` are mandatory.
+
+    pureftpd_mysql_virtual_deleted_users:
+      - name: vuser2
+
+List of users that should not be present on the MySQL database. These is useful to delete old FTP accounts.
+
+
+##### Virtual users on PureDB authentication
 
     pureftpd_virtual_users:
       - name: vuser1
@@ -241,26 +275,7 @@ List of virtual users to create using PureDB as storage method. `name`, `passwor
 List of users that should not be present on the PureDB database. These is useful to delete old FTP accounts.
 
 
-    pureftpd_mysql_virtual_users:
-      - name: vuser1
-        password: p4ssW0rd
-        homedir: /var/ftp/vuser1
-        uid: 2000
-        gid: 2000
-        quota_files: 2000
-        quota_size: 500
-        bandwidth_ul: 5
-        bandwidth_dl: 5
-        ratio_ul: 10
-        ratio_dl: 1
-
-List of virtual users to create using MySQL as storage method. All parameters but `comment` are mandatory.
-
-    pureftpd_mysql_virtual_deleted_users:
-      - name: vuser2
-
-List of users that should not be present on the MySQL database. These is useful to delete old FTP accounts.
-
+##### Import system users as virtual users
 
     pureftpd_virtual_users_import: false
 
